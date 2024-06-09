@@ -31,6 +31,7 @@ from .models import (
     ModuleInstanceArgument,
     ModuleDefinitionArgumentInfo,
     ModuleDefinitionNumericArg,
+    ParamInstanceRef,
     Product,
     TranslationsType,
     XMLArea,

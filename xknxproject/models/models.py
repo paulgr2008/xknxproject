@@ -138,6 +138,7 @@ class DeviceInstance:
         com_object_instance_refs: list[ComObjectInstanceRef],
         module_instances: list[ModuleInstance],
         com_objects: list[ComObject] | None = None,
+        param_instance_refs: list[ParamInstanceRef]
     ):
         """Initialize a Device Instance."""
         self.identifier = identifier
@@ -158,6 +159,7 @@ class DeviceInstance:
         self.module_instances = module_instances
         self.com_objects = com_objects or []
         self.application_program_ref: str | None = None
+        self.param_instance_refs = param_instance_refs
 
         self.individual_address = (
             f"{self.area_address}.{self.line_address}.{self.address}"
@@ -192,6 +194,9 @@ class DeviceInstance:
 
         for com_instance in self.com_object_instance_refs:
             com_instance.merge_application_program_info(application)
+            com_instance.apply_text_from_param_ref(
+                application=application,
+                param_refs=self.param_instance_refs)
             com_instance.apply_module_base_number_argument(
                 module_instances=self.module_instances,
                 application=application,
@@ -278,6 +283,13 @@ class ModuleInstanceArgument:
 
 
 @dataclass
+class ParameterInstanceRef:
+    """Class that represents a ParameterInstanceRef instance."""
+    ref_id: str
+    value: str
+
+
+@dataclass
 class ComObjectInstanceRef:
     """Class that represents a ComObjectInstanceRef instance."""
 
@@ -353,6 +365,17 @@ class ComObjectInstanceRef:
         com_object = application.com_objects[com_object_ref.ref_id]
         self._merge_from_parent_object(com_object_ref)
         self._merge_from_parent_object(com_object)
+
+    def apply_text_from_param_ref(
+            self,
+            param_refs: list[ParamInstanceRef],
+            application: ApplicationProgram
+            ):
+        com_object_ref = application.com_object_refs[self.com_object_ref_id]
+        for text_param in param_refs:
+            if text_param.ref_id == com_object_ref.text_parameter_ref_id:
+                self.text = text_param.value
+                break
 
     def _merge_from_parent_object(self, com_object: ComObject | ComObjectRef) -> None:
         """Fill missing information with information parsed from the application program."""
@@ -579,6 +602,7 @@ class ComObjectRef:
         "update_flag",
         "read_on_init_flag",
         "datapoint_types",
+        "text_parameter_ref_id"
     )
 
     identifier: str  # "Id" - xs:ID - required
@@ -594,6 +618,20 @@ class ComObjectRef:
     update_flag: bool | None  # "UpdateFlag" - knx:Enable_t
     read_on_init_flag: bool | None  # "ReadOnInitFlag" - knx:Enable_t
     datapoint_types: list[DPTType]  # "DataPointType" - knx:IDREFS
+    text_parameter_ref_id: str | None  # "TextParameterRefId" - knx:IDREF - points to a TextParameter
+
+
+@dataclass
+class ParamInstanceRef:
+    """Class that represents a ParameterRef instance."""
+
+    __slots__ = (
+        "ref_id",
+        "value"
+    )
+
+    ref_id: str  # "RefId" - knx:IDREF - required - points to a Parameter Id
+    value: str | None  # "Value" - language dependent
 
 
 @dataclass

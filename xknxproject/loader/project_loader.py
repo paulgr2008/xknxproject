@@ -22,6 +22,7 @@ from xknxproject.models import (
     XMLLine,
     XMLProjectInformation,
     XMLSpace,
+    ParamInstanceRef
 )
 from xknxproject.util import get_dpt_type, parse_dpt_types, parse_xml_flag
 from xknxproject.zip import KNXProjContents
@@ -244,6 +245,15 @@ class _TopologyLoader:
             )
             if (add_addr := address_elem.get("Address")) is not None
         ]
+
+        param_instance_refs = [
+            param_instance_ref
+            for elem in device_element.findall(
+                "{*}ParameterInstanceRefs/{*}ParameterInstanceRef"
+            )
+            if (param_instance_ref := self._create_param_instance(elem)) is not None
+        ]
+
         com_obj_inst_refs = [
             com_obj_inst_ref
             for elem in device_element.findall(
@@ -282,6 +292,7 @@ class _TopologyLoader:
             channels=channels,
             com_object_instance_refs=com_obj_inst_refs,
             module_instances=module_instances,
+            param_instance_refs=param_instance_refs
         )
 
     @staticmethod
@@ -353,6 +364,16 @@ class _TopologyLoader:
             identifier=module_instance_elem.get("Id"),  # type: ignore[arg-type]
             ref_id=module_instance_elem.get("RefId"),  # type: ignore[arg-type]
             arguments=module_arguments,
+        )
+
+    def _create_param_instance(
+            self,
+            param: ElementTree.Element,
+    ) -> ParamInstanceRef | None:
+        """Create ParamInstanceRef."""
+        return ParamInstanceRef(
+            ref_id=param.get("RefId"),
+            value=param.get("Value")
         )
 
 

@@ -202,6 +202,7 @@ class ApplicationProgramLoader:
             update_flag=parse_xml_flag(elem.get("UpdateFlag")),
             read_on_init_flag=parse_xml_flag(elem.get("ReadOnInitFlag")),
             datapoint_types=parse_dpt_types(elem.get("DatapointType")),
+            text_parameter_ref_id=elem.get("TextParameterRefId")
         )
 
     @staticmethod
